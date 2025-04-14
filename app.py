@@ -1,0 +1,44 @@
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+st.set_page_config(layout="wide")
+
+st.title("Painel Interativo - Análise de Chamadas")
+
+# Carregar o dataset
+df = pd.read_csv("dataset_asimov.csv")
+
+# Limpeza e conversão
+meses = {'Jan': 1, 'Fev': 2, 'Mar': 3, 'Abr': 4, 'Mai': 5, 'Jun': 6,
+         'Jul': 7, 'Ago': 8, 'Set': 9, 'Out': 10, 'Nov': 11, 'Dez': 12}
+df['Mês'] = df['Mês'].map(meses)
+df['Chamadas Realizadas'] = df['Chamadas Realizadas'].astype(int)
+df['Dia'] = df['Dia'].astype(int)
+df['Mês'] = df['Mês'].astype(int)
+df['Valor Pago'] = df['Valor Pago'].str.lstrip('R$ ').astype(int)
+df['Status de Pagamento'] = df['Status de Pagamento'].map({'Pago': 1, 'Não pago': 0})
+
+# Filtros
+st.sidebar.header("Filtros")
+mes_selecionado = st.sidebar.multiselect("Filtrar por mês:", options=sorted(df['Mês'].unique()), default=sorted(df['Mês'].unique()))
+df_filtrado = df[df['Mês'].isin(mes_selecionado)]
+
+# KPIs
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Chamadas", df_filtrado['Chamadas Realizadas'].sum())
+col2.metric("Total Valor Pago", f"R$ {df_filtrado['Valor Pago'].sum():,}".replace(',', '.'))
+col3.metric("Taxa de Pagamento", f"{df_filtrado['Status de Pagamento'].mean()*100:.2f}%")
+
+# Gráfico de Chamadas por Dia
+fig1 = px.bar(df_filtrado, x='Dia', y='Chamadas Realizadas', color='Mês', title='Chamadas por Dia')
+st.plotly_chart(fig1, use_container_width=True)
+
+# Gráfico de Valor Pago por Mês
+fig2 = px.box(df_filtrado, x='Mês', y='Valor Pago', title='Distribuição de Valor Pago por Mês')
+st.plotly_chart(fig2, use_container_width=True)
+
+# Exibir a tabela final
+st.subheader("Tabela de Dados Filtrados")
+st.dataframe(df_filtrado)
