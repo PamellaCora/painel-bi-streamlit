@@ -1,4 +1,4 @@
-import dash
+import streamlit as st
 from dash import html, dcc, Input, Output, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
